@@ -1,0 +1,86 @@
+---
+title: "Auto Insurance Analysis"
+output: html_notebook
+---
+
+#Load libraries
+
+```{r}
+library(forecast)
+library(tseries)
+```
+
+#Load data
+
+```{r}
+dpw_data = read.csv("c:/analytics/auto_insurance/auto_vars.csv")
+```
+
+#Create time series object
+
+```{r}
+dpw_ts = ts(dpw_data, frequency = 4, start = c(2001, 1))
+```
+
+
+#Vehicle miles traveled and auto premiums appear to follow the same trend
+
+```{r}
+plot(dpw_data$vmt)
+plot(dpw_data$AutoPhysDPW)
+plot(dpw_data$PvtPassDPW)
+```
+
+#Check if stationary
+
+```{r}
+# p-value < 0.05 indicates the time series is stationary
+adf.test(dpw_ts[,"cnp"])
+adf.test(dpw_ts[,"tvs"])
+adf.test(dpw_ts[,"vmt"])
+adf.test(dpw_ts[,"gas"])
+adf.test(dpw_ts[,"AutoPhysDPW"])
+adf.test(dpw_ts[,"PvtPassDPW"])
+```
+
+To make variables stationarity, take natural log and difference twice
+
+```{r}
+log_diff_ts <- diff(diff(log(dpw_ts)))
+```
+
+#Check if variables are stationary
+p-value < 0.05 indicates the time series is stationary
+
+```{r}
+adf.test(log_diff_ts[,"cnp"])
+adf.test(log_diff_ts[,"tvs"])
+adf.test(log_diff_ts[,"vmt"])
+adf.test(log_diff_ts[,"gas"])
+adf.test(log_diff_ts[,"AutoPhysDPW"])
+adf.test(log_diff_ts[,"PvtPassDPW"])
+```
+
+#Check if autocorrelated
+
+```{r}
+acf(log_diff_ts[,"cnp"])
+acf(log_diff_ts[,"tvs"])
+acf(log_diff_ts[,"vmt"])
+acf(log_diff_ts[,"gas"])
+acf(log_diff_ts[,"AutoPhysDPW"])
+acf(log_diff_ts[,"PvtPassDPW"])
+```
+
+
+#Run linear regressions on auto physical damage and private passenger premiums
+
+```{r}
+ap_tslm <- tslm(AutoPhysDPW ~ cnp + tvs + vmt + gas, data=log_diff_ts)
+summary(log_diff_tslm)
+```
+
+```{r}
+pp <- tslm(PvtPassDPW ~ cnp + tvs + vmt + gas, data=log_diff_ts)
+summary(pp)
+```
