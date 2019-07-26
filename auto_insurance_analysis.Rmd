@@ -43,7 +43,7 @@ adf.test(dpw_ts[,"AutoPhysDPW"])
 adf.test(dpw_ts[,"PvtPassDPW"])
 ```
 
-To make variables stationarity, take natural log and difference twice
+To make variables stationary, take natural log and difference twice
 
 ```{r}
 log_diff_ts <- diff(diff(log(dpw_ts)))
