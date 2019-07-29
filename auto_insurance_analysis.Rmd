@@ -1,0 +1,81 @@
+---
+title: "Auto Insurance Analysis"
+output: html_notebook
+---
+
+#Load libraries
+
+```{r}
+library(forecast)
+library(tseries)
+```
+
+#Load data
+
+```{r}
+dpw_data = read.csv("auto_vars.csv")
+```
+
+#Create time series object
+
+```{r}
+dpw_ts = ts(dpw_data, frequency = 4, start = c(2001, 1))
+```
+
+```{r}
+summary(dpw_ts)
+```
+
+#Check if stationary
+
+```{r}
+# p-value < 0.05 indicates the time series is stationary
+adf.test(dpw_ts[,"Population"])
+adf.test(dpw_ts[,"VehicleSales"])
+adf.test(dpw_ts[,"VehicleMiles"])
+adf.test(dpw_ts[,"GasPrices"])
+adf.test(dpw_ts[,"AutoPhysicalPremiums"])
+adf.test(dpw_ts[,"PrivatePassengerPremiums"])
+```
+
+To make variables stationary, take natural log and difference twice
+
+```{r}
+log_diff_ts <- diff(diff(log(dpw_ts)))
+```
+
+#Check if variables are stationary
+p-value < 0.05 indicates the time series is stationary
+
+```{r}
+adf.test(log_diff_ts[,"Population"])
+adf.test(log_diff_ts[,"VehicleSales"])
+adf.test(log_diff_ts[,"VehicleMiles"])
+adf.test(log_diff_ts[,"GasPrices"])
+adf.test(log_diff_ts[,"AutoPhysicalPremiums"])
+adf.test(log_diff_ts[,"PrivatePassengerPremiums"])
+```
+
+#Check if autocorrelated
+
+```{r}
+acf(log_diff_ts[,"Population"])
+acf(log_diff_ts[,"VehicleSales"])
+acf(log_diff_ts[,"VehicleMiles"])
+acf(log_diff_ts[,"GasPrices"])
+acf(log_diff_ts[,"AutoPhysicalPremiums"])
+acf(log_diff_ts[,"PrivatePassengerPremiums"])
+```
+
+
+#Run linear regressions on auto physical damage and private passenger premiums
+
+```{r}
+ap_tslm <- tslm(AutoPhysicalPremiums ~ Population + VehicleSales + VehicleMiles + GasPrices, data=log_diff_ts)
+summary(ap_tslm)
+```
+
+```{r}
+pp_tslm <- tslm(PrivatePassengerPremiums ~ Population + VehicleSales + VehicleMiles + GasPrices, data=log_diff_ts)
+summary(pp_tslm)
+```
